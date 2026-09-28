@@ -110,3 +110,5 @@ code{background:#eef3f2;padding:1px 6px;border-radius:5px;font-size:.9em}
 .steps{counter-reset:s;list-style:none;margin:10px 0 18px !important}
 .steps li{counter-increment:s;padding-left:40px;position:relative;margin-bottom:12px}
 .steps li::before{content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;font-weight:800;display:grid;place-items:center;font-size:.9rem}
+.box .btns{margin-bottom:0}
+.email-big{font-size:clamp(1rem,4.6vw,1.35rem);font-weight:800;margin-bottom:14px;word-break:break-all}

@@ -17,6 +17,21 @@ def bi(it, en, tag="span"):
     return f'<{tag} class="it">{it}</{tag}><{tag} class="en">{en}</{tag}>'
 
 
+def gmail(subject, body=""):
+    s = f"https://mail.google.com/mail/?view=cm&fs=1&to={EMAIL}&su={quote(subject)}"
+    if body:
+        s += f"&body={quote(body)}"
+    return s
+
+
+def contact_btns(subject, body="", primary_it="Scrivi con Gmail", primary_en="Write with Gmail"):
+    return (f'<div class="btns">'
+            f'<a class="btn primary" href="{gmail(subject, body)}" target="_blank" rel="noopener">✉ {bi(primary_it, primary_en)}</a>'
+            f'<a class="btn" href="{mailto(subject, body)}">{bi("Apri app email", "Open email app")}</a>'
+            f'<button class="btn copy" data-copy="{EMAIL}">{bi("Copia indirizzo", "Copy address")}</button>'
+            f'</div>')
+
+
 def mailto(subject, body=""):
     s = f"mailto:{EMAIL}?subject={quote(subject)}"
     if body:
@@ -355,8 +370,13 @@ def head(title, desc, prefix):
 """
 
 
+GOATCOUNTER = "aquadev"  # codice scelto su goatcounter.com -> https://aquadev.goatcounter.com
+
+
 def foot_script(prefix):
-    return f'<script src="{prefix}assets/site.js"></script>\n</body>\n</html>\n'
+    return (f'<script data-goatcounter="https://{GOATCOUNTER}.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>\n'
+            f'<script src="{prefix}assets/site.js"></script>\n'
+            '</body>\n</html>\n')
 
 
 def badge(app):
@@ -371,11 +391,11 @@ def sidebar(app, active):
         ("index.html", "Panoramica", "Overview", "overview"),
         ("privacy.html", "Privacy Policy", "Privacy Policy", "privacy"),
         ("delete-data.html", "Cancellazione dati", "Data deletion", "delete"),
+        ("support.html", "Supporto", "Support", "support"),
     ]
     nav = "".join(
         f'<a href="{h}" class="{"active" if k == active else ""}">{bi(it, en)}</a>' for h, it, en, k in items
     )
-    nav += f'<a href="{mailto("Supporto " + app["name"])}">{bi("Supporto", "Support")}</a>'
     others = "".join(
         f'<a href="{P}{o["slug"]}/"><img src="{P}assets/img/{o["icon"]}" alt="">{o["name"]}</a>'
         for o in APPS if o["slug"] != app["slug"]
@@ -388,7 +408,7 @@ def sidebar(app, active):
   </div>
   <div><div class="label">{bi("Menu", "Menu")}</div><nav>{nav}</nav></div>
   <div class="others"><div class="label">{bi("Altre app", "Other apps")}</div><nav>{others}<a href="{P}">← Home</a></nav></div>
-  <div class="foot"><span class="copy">© <span class="year"></span> aquadev creations</span><button class="lang">EN</button></div>
+  <div class="foot"><span class="copy">© <span class="year"></span> aquadev creations<span class="visits" hidden><br>{bi("Visite", "Visits")}: <strong class="visits-n"></strong></span></span><button class="lang">EN</button></div>
 </aside>"""
 
 
@@ -463,7 +483,7 @@ def delete(app):
                  + ("Device ID / Identificativo: \n" if app["delete_server"] else "")
                  + "\nI request the deletion of all data associated with my use of the app.\n"
                  "Chiedo la cancellazione di tutti i dati associati al mio utilizzo dell'app.\n")
-    btn = f'<a class="btn primary" href="{mailto(subj, body_mail)}">✉ {bi("Invia richiesta di cancellazione", "Send deletion request")}</a>'
+    btn = contact_btns(subj, body_mail, "Invia richiesta con Gmail", "Send request with Gmail")
     req_it = f"""<div class="box"><h3 style="margin-top:0">Richiesta formale</h3>
 <p>Per qualsiasi domanda sui tuoi dati, o per una richiesta formale di cancellazione, scrivi a <a href="mailto:{EMAIL}">{EMAIL}</a> con oggetto <code>{subj}</code>. Rispondiamo {app['response'][0]}.</p>{btn}</div>"""
     req_en = f"""<div class="box"><h3 style="margin-top:0">Formal request</h3>
@@ -473,6 +493,29 @@ def delete(app):
 <div class="en"><h1>Data deletion — {app['name']}</h1><p class="updated">App <strong>{app['name']}</strong> by developer <strong>{DEV}</strong> on Google Play</p>{app['delete_en']}{req_en}</div>
 </article>"""
     return page(app, "delete", f"Data deletion — {app['name']}", f"How to delete your data for {app['name']} by {DEV}.", body)
+
+
+def support(app):
+    subj = f"Supporto {app['name']} / {app['name']} support"
+    body_mail = f"App: {app['name']}\nTelefono / Phone: \nVersione Android / Android version: \n\nProblema / Issue:\n"
+    tg = ""
+    if app.get("extra_btns"):
+        tg_it = f'<p>Puoi scriverci anche sul canale <a href="{TELEGRAM}" target="_blank" rel="noopener">Telegram</a> o dalla sezione <strong>"speak"</strong> nell\'app.</p>'
+        tg_en = f'<p>You can also reach us on the <a href="{TELEGRAM}" target="_blank" rel="noopener">Telegram</a> channel or through the in-app <strong>"speak"</strong> section.</p>'
+        tg = bi(tg_it, tg_en, "div")
+    body = f"""<article class="doc">
+<h1>{bi("Supporto", "Support")} — {app['name']}</h1>
+{bi("Problemi, domande o idee? Scrivici, rispondiamo di solito entro 48 ore.", "Problems, questions or ideas? Write to us, we usually reply within 48 hours.", "p").replace('<p class="it">','<p class="updated it">').replace('<p class="en">','<p class="updated en">')}
+<div class="box"><p style="margin-bottom:4px" class="muted">Email</p>
+<p class="email-big"><a href="mailto:{EMAIL}">{EMAIL}</a></p>
+{contact_btns(subj, body_mail)}
+</div>
+{tg}
+<h2>{bi("Cosa scrivere", "What to include")}</h2>
+<ul class="it"><li>il modello del telefono e la versione di Android</li><li>cosa stavi facendo quando è successo il problema</li><li>se puoi, uno screenshot</li></ul>
+<ul class="en"><li>your phone model and Android version</li><li>what you were doing when the problem happened</li><li>a screenshot, if you can</li></ul>
+</article>"""
+    return page(app, "support", f"Support — {app['name']}", f"Support for {app['name']} by {DEV}.", body)
 
 
 def home():
@@ -497,6 +540,8 @@ def home():
 <footer class="home-foot">
   <p style="margin-bottom:6px"><strong>Privacy Policy:</strong> {links}</p>
   <p style="margin-bottom:6px"><a href="mailto:{EMAIL}">{EMAIL}</a></p>
+  <p style="margin-bottom:6px;font-size:.8rem">{bi("Il sito conta le visite in forma anonima con GoatCounter, senza cookie e senza dati personali.", "This site counts visits anonymously with GoatCounter, with no cookies and no personal data.")}</p>
+  <p class="visits" hidden style="margin-bottom:6px">{bi("Visite", "Visits")}: <strong class="visits-n"></strong></p>
   © <span class="year"></span> aquadev creations · {bi("Android e Google Play sono marchi di Google LLC.", "Android and Google Play are trademarks of Google LLC.")}
 </footer>
 """ + foot_script(""))
@@ -516,3 +561,4 @@ if __name__ == "__main__":
         write(f"{a['slug']}/index.html", page(a, "overview", f"{a['name']} — aquadev creations", f"{a['name']}: {a['tagline'][1]}", overview(a)))
         write(f"{a['slug']}/privacy.html", privacy(a))
         write(f"{a['slug']}/delete-data.html", delete(a))
+        write(f"{a['slug']}/support.html", support(a))
